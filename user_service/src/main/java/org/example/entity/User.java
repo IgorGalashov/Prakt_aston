@@ -38,7 +38,7 @@ public class User {
         this.name = name;
     }
     public void setEmail(String email){
-        this.email = this.email;
+        this.email = email;
     }
 
     public void setAge(Integer age) {
