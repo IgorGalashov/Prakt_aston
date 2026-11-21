@@ -1,18 +1,17 @@
 package org.example.ui;
 
-import org.example.dao.UserDao;
 import org.example.entity.User;
+import org.example.service.UserService;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 
 public class ConsoleMenu {
-    private final UserDao userDao;
+    private final UserService userService;
     private final Scanner scanner;
 
-    public ConsoleMenu(UserDao userDao) {
-        this.userDao = userDao;
+    public ConsoleMenu(UserService userService) {
+        this.userService = userService;
         this.scanner = new Scanner(System.in);
     }
 
@@ -63,9 +62,8 @@ public class ConsoleMenu {
             String ageInput = scanner.nextLine();
             Integer age = ageInput.isBlank() ? null : Integer.parseInt(ageInput);
 
-            User user = new User(name, email, age);
-            userDao.save(user);
-            System.out.println("Пользователь успешно создан: " + user);
+            User createdUser = userService.createUser(name, email, age);
+            System.out.println("Пользователь успешно создан: " + createdUser);
         } catch (NumberFormatException e) {
             System.out.println("Ошибка: возраст должен быть числом.");
         } catch (Exception e) {
@@ -78,11 +76,8 @@ public class ConsoleMenu {
             System.out.print("Введите ID пользователя: ");
             Long id = Long.parseLong(scanner.nextLine());
 
-            Optional<User> user = userDao.findById(id);
-            user.ifPresentOrElse(
-                    u -> System.out.println("Найден пользователь: " + u),
-                    () -> System.out.println("Пользователь с ID " + id + " не найден.")
-            );
+            User user = userService.getUserById(id);
+            System.out.println("Найден пользователь: " + user);
         } catch (NumberFormatException e) {
             System.out.println("Ошибка: ID должен быть числом.");
         } catch (Exception e) {
@@ -92,7 +87,7 @@ public class ConsoleMenu {
 
     private void getAllUsers() {
         try {
-            List<User> users = userDao.findAll();
+            List<User> users = userService.getAllUsers();
             if (users.isEmpty()) {
                 System.out.println("Список пользователей пуст.");
             } else {
@@ -109,35 +104,21 @@ public class ConsoleMenu {
             System.out.print("Введите ID пользователя для обновления: ");
             Long id = Long.parseLong(scanner.nextLine());
 
-            Optional<User> optionalUser = userDao.findById(id);
-            if (optionalUser.isEmpty()) {
-                System.out.println("Пользователь с ID " + id + " не найден.");
-                return;
-            }
+            User currentUser = userService.getUserById(id);
+            System.out.println("Текущие данные: " + currentUser);
 
-            User user = optionalUser.get();
-            System.out.println("Текущие данные: " + user);
-
-            System.out.print("Новое имя (Enter, чтобы оставить '" + user.getName() + "'): ");
+            System.out.print("Новое имя (Enter, чтобы оставить '" + currentUser.getName() + "'): ");
             String name = scanner.nextLine();
-            if (!name.isBlank()) {
-                user.setName(name);
-            }
 
-            System.out.print("Новый email (Enter, чтобы оставить '" + user.getEmail() + "'): ");
+            System.out.print("Новый email (Enter, чтобы оставить '" + currentUser.getEmail() + "'): ");
             String email = scanner.nextLine();
-            if (!email.isBlank()) {
-                user.setEmail(email);
-            }
 
-            System.out.print("Новый возраст (Enter, чтобы оставить '" + user.getAge() + "'): ");
+            System.out.print("Новый возраст (Enter, чтобы оставить '" + currentUser.getAge() + "'): ");
             String ageInput = scanner.nextLine();
-            if (!ageInput.isBlank()) {
-                user.setAge(Integer.parseInt(ageInput));
-            }
+            Integer age = ageInput.isBlank() ? null : Integer.parseInt(ageInput);
 
-            userDao.update(user);
-            System.out.println("Данные обновлены: " + user);
+            User updated = userService.updateUser(id, name, email, age);
+            System.out.println("Данные обновлены: " + updated);
         } catch (NumberFormatException e) {
             System.out.println("Ошибка: введите корректное число.");
         } catch (Exception e) {
@@ -150,12 +131,8 @@ public class ConsoleMenu {
             System.out.print("Введите ID пользователя для удаления: ");
             Long id = Long.parseLong(scanner.nextLine());
 
-            boolean deleted = userDao.deleteById(id);
-            if (deleted) {
-                System.out.println("Пользователь с ID " + id + " успешно удален.");
-            } else {
-                System.out.println("Пользователь с ID " + id + " не найден.");
-            }
+            userService.deleteUser(id);
+            System.out.println("Пользователь с ID " + id + " успешно удален.");
         } catch (NumberFormatException e) {
             System.out.println("Ошибка: ID должен быть числом.");
         } catch (Exception e) {
